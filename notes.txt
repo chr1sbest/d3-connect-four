@@ -1,0 +1,27 @@
+First Thoughts
+=============
+-It seems like the most difficult problem is going to be recognizing a diagonal
+ winner. There are a few approaches in setting up the board that I'm considering:
+    1) Graph representation with each spot represented by a node containing pointers
+       to each adjacent (8 directions) node.
+    2) Matrix representation using columns/rows.
+-The visual representation will ideally be separate from the engine that runs the game.
+-I'd like to implement a little bounce animation, but only if I have time to.
+-I'll probably throw it on Flask, Bootstrap 3.0 for responsiveness, and put it up on Heroku
+
+Graph
+=============
+-The graph representaion would require a little extra overhead to set up, but the
+ benefits would be that it could easily be expanded if needed and checking for winners
+ would be straightforward. 
+-To find a winner -> upon placing a token, check if any of the adjacent
+ tokens are the same color -> if so, recursively search in that direction and the OPPOSITE
+ direction until reaching a different color and return the total number of tokens in that path.
+ If that sum is >= 4, then this token placement was a winning move.
+-The downside is a little more overhead in time, space, and complexity to initialize 
+ all of these nodes and pointers (compared to setting up arrays).
+-While there are major upsides to a graph approach in the potential of expanding this game, 
+ for the sake of simplicity, I think a matrix representation will be a better implementation.
+
+ Matrix
+ ============
