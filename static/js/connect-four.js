@@ -1,5 +1,5 @@
-var connectFour = {
-    init: function(options) {
+connectFour = 
+{   init: function(options) {
         this.options = options || {};
         this.options.columns = this.options.columns || 7;
         this.options.rows = this.options.rows || 6;
@@ -33,20 +33,21 @@ var connectFour = {
 ,   win: function(color) {
         setTimeout(function () {
             alert(color + " has won!");
+            console.log(color + " has won!");
         }, 400);
         this.finished = true;
     }
 ,   reset: function(options) {
         var options = options || this.options;
-        console.log(options);
+        this.colorSwitch = 0;
         this.engine.reset(options);
         this.board.reset(options);
         this.finished = false;
     }
 }
 
-var engine = {
-    init: function(options) {
+var engine = 
+{   init: function(options) {
         this.options = options;
         this.columns = this.options.columns;
         this.rows = this.options.rows;
@@ -107,7 +108,6 @@ var engine = {
             if (adjacent == color) {
                 var total = self.checkPaths(steps, color, column, row);
                 if (total >= self.winCondition) {
-                    console.log('winner');
                     connectFour.win(color);
                 }
             }
@@ -151,8 +151,8 @@ var engine = {
     }
 }
 
-var board = {
-    init: function(options) {
+var board = 
+{   init: function(options) {
         this.options = options;
         this.diameter = this.options.diameter;
         this.columns = this.options.columns;
