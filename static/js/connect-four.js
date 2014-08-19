@@ -1,10 +1,11 @@
 var connectFour = {
     init: function(options) {
         this.options = options || {};
-        this.options.diameter = this.options.diameter || 50;
         this.options.columns = this.options.columns || 7;
         this.options.rows = this.options.rows || 6;
-        this.options.colors = this.options.colors || ['red', 'yellow'];
+        this.options.diameter = this.options.diameter || 500 / this.options.columns;
+        this.options.winCondition = this.options.winCondition || 4;
+        this.options.colors = this.options.colors || ['Red', 'Yellow'];
         this.colorSwitch = 0;
 
         //Initialize Separate Board UI
@@ -17,19 +18,30 @@ var connectFour = {
     }
 ,   drop: function(column){
         //Find the depth of the drop using the drop engine.
-        var row = this.engine.checkDrop(column);
-        if (row >= 0) { //Ensure column is not full!
-            this.colorSwitch += 1;
-            var color = this.options.colors[this.colorSwitch % this.options.colors.length];
-            //Execute move on both the board and the engine.
-            this.board.drop(row, column, color);
-            this.engine.drop(row, column, color);
+        if (!this.finished){
+            var row = this.engine.checkDrop(column);
+            if (row >= 0) { //Ensure column is not full!
+                this.colorSwitch += 1;
+                var color = this.options.colors[this.colorSwitch % this.options.colors.length];
+                //Execute move on both the board and the engine.
+                this.board.drop(row, column, color);
+                this.engine.drop(row, column, color);
+            }
+            else {alert("Column is full!");}
         }
-        else {alert("Column is full!");}
     }
-,   reset: function() {
-        this.engine.reset(this.options);
-        this.board.reset(this.options);
+,   win: function(color) {
+        setTimeout(function () {
+            alert(color + " has won!");
+        }, 400);
+        this.finished = true;
+    }
+,   reset: function(options) {
+        var options = options || this.options;
+        console.log(options);
+        this.engine.reset(options);
+        this.board.reset(options);
+        this.finished = false;
     }
 }
 
@@ -38,29 +50,104 @@ var engine = {
         this.options = options;
         this.columns = this.options.columns;
         this.rows = this.options.rows;
-        this.colors = this.options.colors
-        this.matrix = this.buildMatrix()
+        this.colors = this.options.colors;
+        this.winCondition = this.options.winCondition;
+        this.matrix = this.buildMatrix();
+        this.directions = 
+        {   up: [0, 1]
+        ,   upright: [1, 1]
+        ,   right: [1, 0]
+        ,   downright: [1, -1]
+        ,   down: [0,-1]
+        ,   downleft: [-1, -1]
+        ,   left: [-1, 0]
+        ,   upleft: [-1, 1]
+        }
     }
 ,   buildMatrix: function(){
-        var matrix = [null, null, null, null, null, null, null];
-        for (var i = 0; i <= this.columns; i++) {
-            matrix[i] = 0;
-        }
+        //Build [Column] x [Row] matrix
+        var self = this;
+        var matrix = _.map(_.range(this.columns), function(val) {
+            return _.map(_.range(self.rows), function(val) {
+                return null;});
+        });
         return matrix
     }
 ,   checkDrop: function(column){
-        this.matrix[column] += 1
-        return 6 - this.matrix[column];
+        //Determine the lowest available row
+        var column = this.matrix[column];
+        for (var i = 0; i < this.rows; i++) {
+            if (column[i] !== null) {
+                break;
+            }
+        };
+        return i - 1;
     }
 ,   drop: function(row, column, color){
         //Execute Drop
-        this.checkWin()
+        this.matrix[column][row] = color;
+        if (this.checkWin(column, row, color)) {alert(color + " wins!");}
     }
-,   checkWin: function(){
-        //Check the board for a win
+,   checkWin: function(column, row, color){
+        //Check if any adjacent tokens are the same color
+        var color = color
+        ,   column = column
+        ,   row = row
+        ,   self = this
+        ;
+        _.each(this.directions, function(steps, direction) {
+            //Iterate through each direction in the matrix
+            var nextCol = column + steps[0] 
+            ,   nextRow = row + steps[1]
+            ,   adjacent = null
+            ;
+            if (self.matrix[nextCol]) {
+                adjacent = self.matrix[nextCol][nextRow] || null
+            }
+            if (adjacent == color) {
+                var total = self.checkPaths(steps, color, column, row);
+                if (total >= self.winCondition) {
+                    console.log('winner');
+                    connectFour.win(color);
+                }
+            }
+        });
+        
+    }
+,   checkPaths: function(direction, color, column, row) {
+        var pathTotal = 0
+        ,   nextCol = column + direction[0]
+        ,   nextRow = row + direction[1]
+        ,   oppDir = _.map(direction, function(val) {return -val})
+        ,   oppCol = column + oppDir[0]
+        ,   oppRow = row + oppDir[1]
+        ,   opp = this.matrix[oppCol] || null 
+        ;
+        //Add pathtotal from initial direction
+        pathTotal += this.pathTotal(direction, color, nextCol, nextRow);
+        //Add pathtotal from opposite direction if same color
+        if (opp) {opp = this.matrix[oppCol][oppRow] || null};
+        if (opp == color) {
+            pathTotal += this.pathTotal(oppDir, color, oppCol, oppRow)
+        }
+        return pathTotal;
+    }
+,   pathTotal: function(direction, color, column, row){
+        var adjacent = this.matrix[column] || null;
+        if (adjacent) {adjacent = this.matrix[column][row] || null}
+        if (adjacent == color) {
+            var nextCol = column + direction[0]
+            ,   nextRow = row + direction[1]
+            ;
+            return 1 + this.pathTotal(direction, color, nextCol, nextRow);
+        }
+        else {
+            return 1;
+        }
+
     }
 ,   reset: function(options) {
-        this.matrix = this.buildMatrix();
+        this.init(options);
     }
 }
 
@@ -104,7 +191,7 @@ var board = {
         }
     }
 ,   drawButtons: function(){
-        //Draw invisible rectangles as clickable buttons for the user.
+        //Draw invisible, clickable rectangles over the columns.
         for (var i = 0; i <= this.columns; i++) {
             this.canvas.append("rect")
                 .attr("column", i)
@@ -116,6 +203,7 @@ var board = {
         }
     }
 ,   drop: function(row, column, color){
+        //Animate a colored piece drop to appropriate row.
         var cx = column * this.diameter
         ,   cy = row * this.diameter
         ,   circle = this.canvas.append("circle")
@@ -135,18 +223,32 @@ var board = {
     }
 ,   events: function() {
         var self = this;
-        //Clicking a rectangle initiates drop logic for that column.
+        //Clicking a rectangle initiates drop logic for that column
         d3.selectAll("rect").on("click", function(){
             var column = +this.getAttribute("column");
             connectFour.drop(column);
         });
+        //Reset the board and the engine
         d3.selectAll("#reset").on("click", function(){
-            connectFour.reset();
+            var cols = +document.querySelector("#cols").value || 7
+            ,   rows = +document.querySelector("#rows").value || 6
+            ,   winCond = +document.querySelector("#wincond").value || 4
+            ,   diameter = cols > rows ? 500 / cols : 500 / rows
+            ,   options = 
+                {   columns: cols
+                ,   rows: rows
+                ,   winCondition: winCond
+                ,   diameter: diameter
+                }
+            ;
+            connectFour.reset(options);
         });
     }
 ,   reset: function(options) {
-        var self = this;
         //Drop circles from the bottom to emulate real Connect Four!
+        var self = this
+        ,   options = options
+        ;
         this.circles.map(function(circle){
             var cy = +circle[0][0].getAttribute("cy");
             circle.transition()

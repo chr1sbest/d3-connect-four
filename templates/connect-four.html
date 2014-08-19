@@ -7,7 +7,15 @@
 <body>
     <h1>Connect Four</h1>
     <div id="board"></div>
+    <div id="form">
+        <form id="options">
+            Columns: <input type="text" id="cols" placeholder="6"><br>
+            Rows: &nbsp;&nbsp;&nbsp;&nbsp; <input type="text" id="rows" placeholder="7"><br>
+            Connect:&nbsp; <input type="text" id="wincond" placeholder="4">
+        </form>
+    </div>
     <button type="button" id="reset">Reset!</button>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"></script>
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <script src="../static/js/connect-four.js"></script>
 </body>
