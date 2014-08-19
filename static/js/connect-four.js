@@ -165,7 +165,9 @@ var board = {
         this.canvas = d3.select("#board")
             .append("svg")
             .attr("width", this.width)
-            .attr("height", this.height + 5);
+            .attr("height", this.height + 5)
+            .attr("display", "block")
+            .attr("style", "margin: 0 auto");
         this.drawGrid();
         this.drawButtons();
         this.events();
