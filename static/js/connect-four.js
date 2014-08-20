@@ -31,11 +31,11 @@ connectFour =
         }
     }
 ,   win: function(color) {
+        this.finished = true;
         setTimeout(function () {
             alert(color + " has won!");
             console.log(color + " has won!");
         }, 400);
-        this.finished = true;
     }
 ,   reset: function(options) {
         var options = options || this.options;
