@@ -33,7 +33,8 @@ connectFour =
 ,   win: function(color) {
         this.finished = true;
         setTimeout(function () {
-            alert(color + " has won!");
+            $('#winText').text(color + " has won :D");
+            $('#winModal').modal('show');
             console.log(color + " has won!");
         }, 400);
     }
@@ -96,17 +97,18 @@ var engine =
         ,   row = row
         ,   self = this
         ;
-        _.each(this.directions, function(steps, direction) {
+        _.each(this.directions, function(direction, steps) {
             //Iterate through each direction in the matrix
-            var nextCol = column + steps[0] 
-            ,   nextRow = row + steps[1]
+            var nextCol = column + direction[0] 
+            ,   nextRow = row + direction[1]
             ,   adjacent = null
             ;
             if (self.matrix[nextCol]) {
                 adjacent = self.matrix[nextCol][nextRow] || null
             }
             if (adjacent == color) {
-                var total = self.checkPaths(steps, color, column, row);
+                var total = self.checkPaths(direction, color, column, row);
+                //console.log(connectFour.engine.matrix);
                 if (total >= self.winCondition) {
                     connectFour.win(color);
                 }
@@ -115,7 +117,7 @@ var engine =
         
     }
 ,   checkPaths: function(direction, color, column, row) {
-        var pathTotal = 0
+        var pathTotal = 1
         ,   nextCol = column + direction[0]
         ,   nextRow = row + direction[1]
         ,   oppDir = _.map(direction, function(val) {return -val})
@@ -130,21 +132,21 @@ var engine =
         if (opp == color) {
             pathTotal += this.pathTotal(oppDir, color, oppCol, oppRow)
         }
+        console.log(pathTotal);
         return pathTotal;
     }
 ,   pathTotal: function(direction, color, column, row){
-        var adjacent = this.matrix[column] || null;
-        if (adjacent) {adjacent = this.matrix[column][row] || null}
-        if (adjacent == color) {
-            var nextCol = column + direction[0]
-            ,   nextRow = row + direction[1]
-            ;
+        var nextCol = column + direction[0]
+        ,   nextRow = row + direction[1]
+        ,   nextColExists = this.matrix[nextCol] || null
+        ,   nextRowExists = this.matrix[column][row] || null
+        ;
+        if (nextColExists && nextRowExists) {
+          if (this.matrix[nextCol][nextRow] == color) {
             return 1 + this.pathTotal(direction, color, nextCol, nextRow);
-        }
-        else {
-            return 1;
-        }
-
+          } 
+        } 
+        return 1;
     }
 ,   reset: function(options) {
         this.init(options);
